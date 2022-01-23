@@ -1,0 +1,1 @@
+{"timesteps": 5, "n_layers": 1, "units": 600, "batch_size": 96, "learning_rate": 0.0072, "dropout": 0.5, "optimizer": "RMSProp", "epochs": 14}
