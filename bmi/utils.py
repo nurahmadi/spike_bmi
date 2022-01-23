@@ -9,7 +9,7 @@ import numpy as np
 from scipy import stats
 from scipy.stats import shapiro, ttest_rel, wilcoxon
 import tensorflow as tf
-from optuna.trial import TrialState
+import matplotlib.ticker as ticker
 
 def flatten_list(lst):
     """
@@ -122,31 +122,40 @@ def count_params(model):
     """
     Count trainable, non-trainable, and total parameters of a model.
     """
-    trainable_count = np.sum([np.prod(v.get_shape()) for v in model.trainable_weights])
-    non_trainable_count = np.sum([np.prod(v.get_shape()) for v in model.non_trainable_weights])
+    trainable_count = np.sum([np.prod(v.get_shape()) for v in model.trainable_weights]).astype(int)
+    non_trainable_count = np.sum([np.prod(v.get_shape()) for v in model.non_trainable_weights]).astype(int)
     total_count = trainable_count + non_trainable_count
     print(f"Total params: {total_count}")
     print(f"Trainable params: {trainable_count}")
     print(f"Non-trainable params: {non_trainable_count}")
     return total_count, trainable_count, non_trainable_count
 
-def show_result(study):
+def customize_plot(ax, xlabel, ylabel, xticks, xticklabels, title=None, xlim=None, ylim=None, fontsize=12, rotation=0):
     """
-    Show the hyperparameter optimization results.
+    Customize plot
     """
-    pruned_trials = study.get_trials(deepcopy=False, states=[TrialState.PRUNED])
-    complete_trials = study.get_trials(deepcopy=False, states=[TrialState.COMPLETE])
+    if xlim is not None:
+        ax.set_xlim(xlim)
+    if ylim is not None:
+        ax.set_ylim(ylim)
+        ax.yaxis.set_major_locator(ticker.LinearLocator(numticks=5))
+    ax.set_xticks(xticks)
+    ax.set_xticklabels(xticklabels, rotation=rotation)
+    ax.xaxis.set_tick_params(labelsize=fontsize-1.5, width=1.25)
+    ax.yaxis.set_tick_params(labelsize=fontsize-1.5, width=1.25)
+    ax.set_xlabel(xlabel, fontsize=fontsize)
+    ax.set_ylabel(ylabel, fontsize=fontsize)
+    ax.set_title(title, fontsize=fontsize+1)
+    #ax.yaxis.set_major_formatter(ticker.StrMethodFormatter("{x:.0f}"))
+    for axis in ['bottom','left','top','right']:
+        ax.spines[axis].set_linewidth(1.25)
 
-    print("Study statistics: ")
-    print("  Number of finished trials: ", len(study.trials))
-    print("  Number of pruned trials: ", len(pruned_trials))
-    print("  Number of complete trials: ", len(complete_trials))
-
-    print("Best trial:")
-    trial = study.best_trial
-
-    print("  Value: ", trial.value)
-
-    print("  Params: ")
-    for key, value in trial.params.items():
-        print("    {}: {}".format(key, value))
+def legend_plot(ax, loc='best', box_xy=None, title=None, fontsize=12, handlelength=1.5, columnspacing=1.5, ncol=1, frameon=False):
+    """
+    Modify plot legend
+    """
+    leg = ax.legend(loc=loc, bbox_to_anchor=box_xy, title=title, title_fontsize=fontsize+1, fontsize=fontsize, handlelength=handlelength, ncol=ncol, columnspacing=columnspacing, frameon=frameon)        
+    leg.get_frame().set_edgecolor('k')
+    leg.get_frame().set_linewidth(1.25) 
+    for legobj in leg.legendHandles:
+        legobj.set_linewidth(2.0)
