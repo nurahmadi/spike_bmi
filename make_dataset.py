@@ -40,8 +40,10 @@ def main(args):
             sua_rate, y_task = extract(sua_train[i], task_time, nperseg, noverlap, task=task_data, method=args.method, a=args.alpha)
         X_sua.append(sua_rate)
 
+    run_times = []
     for i in range(num_mua):
         #print(f"Extracting MUA/threshold crossing features from channel no: {i}")
+        extract_start = timer.time()
         if args.method == 'binning':
             mua_rate = extract(mua_train[i], task_time, nperseg, noverlap, task=None, method=args.method)
         elif args.method == 'gaussian':
@@ -50,8 +52,12 @@ def main(args):
             mua_rate = extract(mua_train[i], task_time, nperseg, noverlap, task=None, method=args.method, window=args.method, std=std)
         elif args.method == 'baks':
             mua_rate = extract(mua_train[i], task_time, nperseg, noverlap, task=None, method=args.method, a=args.alpha)
+        extract_end = timer.time()
+        run_time = (extract_end - extract_start) / mua_rate.shape[0]
+        run_times.append(run_time)
         X_mua.append(mua_rate)
-
+    run_times = np.asarray(run_times)
+    print(f"Average (std) run time for spike rate estimation: {run_times.mean()*1e6} ({run_times.std()*1e6}) µs")
     # convert to array
     X_sua = np.asarray(X_sua).T
     X_mua = np.asarray(X_mua).T
